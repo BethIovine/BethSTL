@@ -77,4 +77,90 @@ void *firstLevelAlloc::oom_realloc_handler(void *pointer, size_t n) {
 
 typedef firstLevelAlloc malloc_alloc;
 
+
+class secondLevelAlloc {
+public:
+    static void *allocate(size_t n);
+
+    static void deallocate(void *pointer, size_t n);
+
+    static void *reallocate(void *pointer, size_t oldSize, size_t newSize);
+
+private:
+    enum {
+        ALIGN = 8
+    };
+    enum {
+        MAX_BYTES = 128
+    };
+    enum {
+        LIST_SIZE = 16
+    };
+
+    static size_t chuckRoundUp(size_t n) {
+        return ((n + (size_t) ALIGN - 1) & ~((size_t) ALIGN - 1));
+    }
+
+    union obj {
+        union obj *next_link;
+        char client_data[1];
+    };
+
+    static obj *volatile freeList[LIST_SIZE];
+
+    static size_t freeListIndex(size_t bytes) {
+        return ((bytes + ALIGN - 1) / ALIGN - 1);
+    }
+
+    static void *refill(size_t n);
+
+    static char *chunk_alloc(size_t size, int &nobjs);
+
+    static char *start_free;
+    static char *end_free;
+    static size_t heap_size;
+};
+
+char *secondLevelAlloc::start_free = nullptr;
+char *secondLevelAlloc::end_free = nullptr;
+size_t secondLevelAlloc::heap_size = 0;
+
+secondLevelAlloc::obj *volatile secondLevelAlloc::freeList[LIST_SIZE] =
+        {nullptr, nullptr, nullptr, nullptr,
+         nullptr, nullptr, nullptr, nullptr,
+         nullptr, nullptr, nullptr, nullptr,
+         nullptr, nullptr, nullptr, nullptr};
+
+void *secondLevelAlloc::allocate(size_t n) {
+    if (n > (size_t) MAX_BYTES) {
+        return (malloc_alloc::allocate(n));
+    }
+
+    obj *volatile *myFreeList;
+    obj *result;
+    myFreeList = freeList + freeListIndex(n);
+    result = *myFreeList;
+    if (nullptr == result) {
+        // not find useful freelist unit in freelist array
+        void *r = refill(chuckRoundUp(n));
+        return r;
+    }
+
+    *myFreeList = result->next_link;
+    return (result);
+}
+
+void secondLevelAlloc::deallocate(void *pointer, size_t n) {
+    if (n > (size_t) MAX_BYTES) {
+        malloc_alloc::deallocate(pointer, n);
+        return;
+    }
+
+    obj *temp = (obj *) pointer;
+    obj *volatile *myFreeList;
+    myFreeList = freeList + freeListIndex(n);
+    temp->next_link = *myFreeList;
+    *myFreeList = temp;
+}
+
 #endif //BETHSTL_ALLOC_H
