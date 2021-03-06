@@ -261,5 +261,6 @@ public:
     }
 };
 
+typedef freeList_alloc STL_DEFAULT_ALLOCATOR
 
 #endif //BETHSTL_ALLOC_H
