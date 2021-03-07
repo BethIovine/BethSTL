@@ -445,6 +445,11 @@ void list<T, Alloc>::reverse() {
 }
 
 // list can't use std::sort, use its own sort version.
+// 1.carry get 1 element from list, and transfer to counter[0].
+// 2.carry get 1 element from list and merge with counter[0],then transfer to count[1] (2 elements).
+// 3.repeat counter[0] and merge count[1],then transfer to count[2] (4 elements)
+// 4. go on and on and on...
+// 5.util traverse all element from list, then merge count[0] to count[fill-1] ,swap back to list.
 template<class T, class Alloc>
 void list<T, Alloc>::sort() {
     if (endNode->next == endNode || endNode->next->next == endNode) return;
@@ -454,7 +459,7 @@ void list<T, Alloc>::sort() {
     while (!empty()) {
         carry.splice(carry.begin(), this, begin());   // get one element from list to carry
         int i = 0;
-        while (i < fill && !counter->empty()) {
+        while (i < fill && !counter[i].empty()) {
             counter[i].merge(carry);    // move to counter[i],counter[i] can hold 2^i elements;
             carry.swap(counter[i + 1]);
         }
