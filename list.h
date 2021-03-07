@@ -270,6 +270,13 @@ public:
         }
     }
 
+    void splice(iterator pos, list &, iterator i) {
+        iterator j = i;
+        ++j;
+        if (pos == i || pos == j) return;
+        this->transfer(pos, i, j);
+    }
+
     void remove(const T &value);
 
     void unique();
@@ -437,5 +444,27 @@ void list<T, Alloc>::reverse() {
     }
 }
 
+// list can't use std::sort, use its own sort version.
+template<class T, class Alloc>
+void list<T, Alloc>::sort() {
+    if (endNode->next == endNode || endNode->next->next == endNode) return;
+    list<T, Alloc> carry;
+    list<T, Alloc> counter[64];  // most hold 2^64 elements;
+    int fill = 0;
+    while (!empty()) {
+        carry.splice(carry.begin(), this, begin());   // get one element from list to carry
+        int i = 0;
+        while (i < fill && !counter->empty()) {
+            counter[i].merge(carry);    // move to counter[i],counter[i] can hold 2^i elements;
+            carry.swap(counter[i + 1]);
+        }
+        carry.swap(counter[i]);
+        if (i == fill) ++fill;
+    }
+
+    for (int i = 1; i < fill; ++i)
+        counter[i].merge(counter[i - 1]);     //merge all data
+    swap(counter[fill - 1]);
+}
 
 #endif //BETHSTL_LIST_H
