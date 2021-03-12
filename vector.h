@@ -122,6 +122,18 @@ public:
         return resize(newSize, T());
     }
 
+    void reserve(size_type __n) {
+        if (capacity() < __n) {
+            const size_type __old_size = size();
+            iterator __tmp = allocate_and_copy(__n, start, finish);
+            destroy(start, finish);
+            deallocate(start, end_of_storage - start);
+            start = __tmp;
+            finish = __tmp + __old_size;
+            end_of_storage = start + __n;
+        }
+    }
+
     void clear() { erase(begin(), end()); }
 
     iterator insert(iterator pos, const T &value) {
