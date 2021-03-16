@@ -6,6 +6,7 @@
 #define BETHSTL_ALGORITHM_BASE_H
 
 #include "iterator.h"
+#include "type_traits.h"
 #include <cstring>
 #include <utility>
 
@@ -133,6 +134,77 @@ mismatch(InputIterator1 first1, InputIterator1 last1, InputIterator2 first2, Inp
         ++first2;
     }
     return std::pair<InputIterator1, InputIterator2>(first1, first2);
+}
+
+template<class InputIterator, class OutputIterator>
+inline OutputIterator copy(InputIterator first, InputIterator last, OutputIterator result) {
+    return copy_dispatch<InputIterator, OutputIterator>()(first, last, result);
+}
+
+inline char *copy(const char *first, const char *last, char *result) {
+    memmove(result, first, last - first);
+    return result + (last - first);
+}
+
+inline wchar_t *copy(const wchar_t *first, const wchar_t *last, wchar_t *result) {
+    memmove(result, first, (last - first) * sizeof(wchar_t));
+    return result + (last - first);
+}
+
+template<class InputIterator, class OutputIterator>
+struct copy_dispatch {
+    OutputIterator operator()(InputIterator first, InputIterator last, OutputIterator result) {
+        return _copy(first, last, result, iterator_category(first));
+    }
+};
+
+template<class T>
+struct copy_dispatch<T *, T *> {
+    T *operator()(T *first, T *last, T *result) {
+        typedef typename __type_traits<T>::has_trivial_assignment_operator t;
+        return _copy_t(first, last, result, t());
+    }
+};
+
+template<class T>
+struct copy_dispatch<const T *, T *> {
+    T *operator()(T *first, T *last, T *result) {
+        typedef typename __type_traits<T>::has_trivial_assignment_operator t;
+        return _copy_t(first, last, result, t());
+    }
+};
+
+template<class InputIterator, class OutputIterator>
+inline OutputIterator _copy(InputIterator first, InputIterator last, OutputIterator result, input_iterator_tag) {
+    for (; first != last; ++result, ++first) {
+        *result = *first;
+    }
+    return result;
+}
+
+template<class RandomAccessIterator, class OutputIterator>
+inline OutputIterator
+_copy(RandomAccessIterator first, RandomAccessIterator last, OutputIterator result, random_access_iterator_tag) {
+    return _copy_d(first, last, result, distance_type(first));
+}
+
+template<class RandomAccessIterator, class OutputIterator, class Distance>
+inline OutputIterator
+_copy_d(RandomAccessIterator first, RandomAccessIterator last, OutputIterator result, Distance *) {
+    for (Distance n = last - first; n > 0; --n, ++result, ++first)
+        *result = *first;
+    return result;
+}
+
+template<class T>
+inline T *_copy_t(const T *first, const T *last, T *result, __true_type) {
+    memmove(result, first, sizeof(T) * (last - first));
+    return result + (last - first);
+}
+
+template<class T>
+inline T *_copy_t(const T *first, const T *last, T *result, __false_type) {
+    return _copy_d(first, last, result, (ptrdiff_t *) 0);
 }
 
 
