@@ -208,4 +208,90 @@ inline T *_copy_t(const T *first, const T *last, T *result, __false_type) {
 }
 
 
+// set related algorithm
+template<class InputIterator1, class InputIterator2, class OutputIterator>
+OutputIterator set_union(InputIterator1 first1, InputIterator1 last1,
+                         InputIterator2 first2, InputIterator2 last2,
+                         OutputIterator result) {
+    while (first1 != last1 && first2 != last2) {
+        if (*first1 > *first2) {
+            *result = *first2;
+            ++first2;
+        } else if (*first1 < *first2) {
+            *result = *first1;
+            ++first1;
+        } else {
+            //equal
+            *result = *first1;
+            ++first1;
+            ++first2;
+        }
+        ++result;
+    }
+    // copy all remain element to result
+    return copy(first1, last1, copy(first2, last2, result));
+}
+
+template<class InputIterator1, class InputIterator2, class OutputIterator>
+OutputIterator set_intersection(InputIterator1 first1, InputIterator1 last1,
+                                InputIterator2 first2, InputIterator2 last2,
+                                OutputIterator result) {
+    while (first1 != last1 && first2 != last2) {
+        if (*first1 > *first2) {
+            ++first2;
+        } else if (*first1 < *first2) {
+            ++first1;
+        } else {
+            *result = *first1;
+            ++first1;
+            ++first2;
+            ++result;
+        }
+        return result;
+    }
+}
+
+//set_difference(s1,s2) means s1 - s2
+template<class InputIterator1, class InputIterator2, class OutputIterator>
+OutputIterator set_difference(InputIterator1 first1, InputIterator1 last1,
+                              InputIterator2 first2, InputIterator2 last2,
+                              OutputIterator result) {
+    while (first1 != last1 && first2 != last2) {
+        if (*first1 < *first2) {
+            *result = *first1;
+            ++result;
+            ++first1;
+        } else if (*first1 > *first2) {
+            ++first2;
+        } else {
+            ++first1;
+            ++first2;
+        }
+        return copy(first1, last1, result);
+    }
+}
+
+//set_symmetric_difference(s1,s2) means (s1-s2) union (s2-s1)
+template<class InputIterator1, class InputIterator2, class OutputIterator>
+OutputIterator set_symmetric_difference(InputIterator1 first1, InputIterator1 last1,
+                                        InputIterator2 first2, InputIterator2 last2,
+                                        OutputIterator result) {
+    while (first1 != last1 && first2 != last2) {
+        if (*first1 < *first2) {
+            *result = *first1;
+            ++first1;
+            ++result;
+        } else if (*first2 < *first1) {
+            *result = *first2;
+            ++first2;
+            ++result;
+        } else {
+            ++first1;
+            ++first2;
+        }
+        return copy(first1, last1, copy(first2, last2, result));
+    }
+}
+
+
 #endif //BETHSTL_ALGORITHM_BASE_H
