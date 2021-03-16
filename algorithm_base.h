@@ -293,5 +293,174 @@ OutputIterator set_symmetric_difference(InputIterator1 first1, InputIterator1 la
     }
 }
 
+template<class ForwardIterator>
+ForwardIterator adjacent_find(ForwardIterator first, ForwardIterator last) {
+    if (first == last) return last;
+    ForwardIterator next = first;
+    while (++next != last) {
+        if (*first == *next) return first;
+        first = next;
+    }
+    return last;
+}
+
+template<class ForwardIterator, class BinaryPredicate>
+ForwardIterator adjacent_find(ForwardIterator first, ForwardIterator last, BinaryPredicate binary_op) {
+    if (first == last) return last;
+    ForwardIterator next = first;
+    while (++next != last) {
+        if (BinaryPredicate(*first, *next)) return first;
+        first = next;
+    }
+    return last;
+}
+
+template<class InputIterator, class T>
+typename iterator_traits<InputIterator>::difference_type
+count(InputIterator first, InputIterator last, const T &value) {
+    typename iterator_traits<InputIterator>::difference_type num = 0;
+    for (; first != last; ++first) {
+        if (*first == value) ++num;
+    }
+    return num;
+}
+
+// count_if means count number if meet the conditions
+template<class InputIterator, class Predicate>
+typename iterator_traits<InputIterator>::difference_type
+count_if(InputIterator first, InputIterator last, Predicate pred) {
+    typename iterator_traits<InputIterator>::difference_type num = 0;
+    for (; first != last; ++first) {
+        if (pred(*first)) ++num;
+    }
+    return num;
+}
+
+template<class InputIterator, class T>
+InputIterator find(InputIterator first, InputIterator last, const T &value) {
+    for (; first != last; ++first) if (*first == value) return first;
+    return last;
+}
+
+template<class InputIterator, class Predicate>
+InputIterator find_if(InputIterator first, InputIterator last, Predicate pred) {
+    for (; first != last; ++first) if (pred(*first)) return first;
+    return last;
+}
+
+template<class ForwardIterator1, class ForwardIterator2>
+inline ForwardIterator1 find_end(ForwardIterator1 first1, ForwardIterator1 last1,
+                                 ForwardIterator2 first2, ForwardIterator2 last2) {
+    typedef typename iterator_traits<ForwardIterator1>::iterator_category category1;
+    typedef typename iterator_traits<ForwardIterator2>::iterator_category category2;
+    return find_end_aux(first1, last1, first2, last2, category1(), category2());
+}
+
+template<class ForwardIterator1, class ForwardIterator2>
+ForwardIterator1 find_end_aux(ForwardIterator1 first1, ForwardIterator1 last1,
+                              ForwardIterator2 first2, ForwardIterator2 last2,
+                              forward_iterator_tag, forward_iterator_tag) {
+    if (first2 == last2) return last1;
+
+    ForwardIterator1 result = last1;
+    while (true) {
+        ForwardIterator1 newResult = search(first1, last1, first2, last2);
+        if (newResult == last1) {
+            // not found
+            return result;
+        } else {
+            result = newResult;
+            first1 = newResult;
+            ++first1;
+        }
+    }
+}
+
+//template<class BidirectionalIterator1, class BidirectionalIterator2>
+//BidirectionalIterator1 find_end_aux(BidirectionalIterator1 first1, BidirectionalIterator1 last1,
+//                              BidirectionalIterator2 first2, BidirectionalIterator2 last2,
+//                              bidirectional_iterator_tag, bidirectional_iterator_tag){
+//
+//}
+
+
+template<class InputIterator, class ForwardIterator>
+InputIterator find_first_of(InputIterator first1, InputIterator last1,
+                            ForwardIterator first2, ForwardIterator last2) {
+    for (; first1 != last1; ++first1) {
+        for (ForwardIterator iter = first2; iter != last2; ++iter) {
+            if (*first1 == *iter) return first1;
+        }
+    }
+    return last1;
+}
+
+template<class InputIterator, class ForwardIterator, class BinaryPredicate>
+InputIterator find_first_of(InputIterator first1, InputIterator last1,
+                            ForwardIterator first2, InputIterator last2,
+                            BinaryPredicate binary_op) {
+    for (; first1 != last1; ++first1) {
+        for (ForwardIterator iter = first2; iter != last2; ++iter) {
+            if (binary_op(*first1, *iter)) return first1;
+        }
+    }
+    return last1;
+}
+
+template<class InputIterator, class Function>
+Function for_each(InputIterator first, InputIterator last, Function func) {
+    for (; first != last; ++first) {
+        func(*first);
+    }
+    return func;
+}
+
+template<class OutputIterator, class Size, class Generator>
+OutputIterator generate_n(OutputIterator first, Size n, Generator gen) {
+    for (int i = 0; i < n; ++i, ++first) {
+        *first = gen();
+    }
+    return first;
+}
+
+template<class ForwardIterator, class Generator>
+void generate(ForwardIterator first, ForwardIterator last, Generator gen) {
+    for (; first != last; ++first) {
+        *first = gen();
+    }
+}
+
+template<class InputIterator1, class InputIterator2>
+bool includes(InputIterator1 first1, InputIterator1 last1,
+              InputIterator2 first2, InputIterator2 last2) {
+    while (first1 != last1 && first2 != last2) {
+        if (*first1 < *first2) {
+            ++first1;
+        } else if (*first1 > *first2) {
+            return false;
+        } else {
+            ++first1;
+            ++first2;
+        }
+    }
+    return first2 == last2;
+}
+
+template<class InputIterator1, class InputIterator2, class Compare>
+bool includes(InputIterator1 first1, InputIterator1 last1,
+              InputIterator2 first2, InputIterator2 last2,
+              Compare comp) {
+    while (first1 != last1 && first2 != last2) {
+        if (comp(*first1, *first2)) {
+            ++first1;
+        } else if (comp(*first2, *first1)) {
+            return false;
+        } else {
+            ++first1;
+            ++first2;
+        }
+    }
+    return first2 == last2;
+}
 
 #endif //BETHSTL_ALGORITHM_BASE_H
