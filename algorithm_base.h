@@ -867,4 +867,128 @@ OutputIterator _unique_copy(InputIterator first, InputIterator last,
     return ++result;
 }
 
+template<class ForwardIterator, class T>
+inline ForwardIterator lower_bound(ForwardIterator first, ForwardIterator last,
+                                   const T &value) {
+    return _lower_bound(first, last, value, distance_type(first), iterator_category(first));
+}
+
+template<class ForwardIterator, class T, class Compare>
+inline ForwardIterator lower_bound(ForwardIterator first, ForwardIterator last,
+                                   const T &value, Compare comp) {
+    return _lower_bound(first, last, value, comp, distance_type(first), iterator_category(first));
+}
+
+template<class ForwardIterator, class T, class Distance>
+ForwardIterator _lower_bound(ForwardIterator first, ForwardIterator last,
+                             const T &value, Distance *, forward_iterator_tag) {
+    Distance len = distance(first, last, len);
+    Distance half;
+    ForwardIterator middle;
+
+    while (len > 0) {
+        half = len / 2;
+        middle = first;
+        advance(middle, half);
+        if (*middle < value) {
+            first = middle;
+            first++;
+            len = len - half - 1;
+        } else {
+            len = half;
+        }
+    }
+    return first;
+}
+
+
+template<class RandomAccessIterator, class T, class Distance>
+RandomAccessIterator _lower_bound(RandomAccessIterator first, RandomAccessIterator last,
+                                  const T &value, Distance *, random_access_iterator_tag) {
+    Distance len = last - first;
+    Distance half;
+    RandomAccessIterator middle;
+
+    while (len > 0) {
+        half = len / 2;
+        middle = first + half;
+        if (*middle < value) {
+            first = middle + 1;
+            len = len - half - 1;
+        } else {
+            len = half;
+        }
+    }
+    return first;
+}
+
+template<class ForwardIterator, class T>
+inline ForwardIterator upper_bound(ForwardIterator first, ForwardIterator last,
+                                   const T &value) {
+    return _upper_bound(first, last, value, distance_type(first), iterator_category(first));
+}
+
+template<class ForwardIterator, class T, class Compare>
+inline ForwardIterator upper_bound(ForwardIterator first, ForwardIterator last,
+                                   const T &value, Compare comp) {
+    return _upper_bound(first, last, value, comp, distance_type(first), iterator_category(first));
+}
+
+template<class ForwardIterator, class T, class Distance>
+ForwardIterator _upper_bound(ForwardIterator first, ForwardIterator last,
+                             const T &value, Distance *, forward_iterator_tag) {
+    Distance len = distance(first, last);
+    ForwardIterator middle;
+    Distance half;
+
+    while (len > 0) {
+        half = len / 2;
+        middle = first;
+        advance(middle, len);
+        if (*middle > value) {
+            len = half;
+        } else {
+            first = middle;
+            ++first;
+            len = len - half - 1;
+        }
+    }
+
+    return first;
+}
+
+
+template<class RandomAccessIterator, class T, class Distance>
+RandomAccessIterator _upper_bound(RandomAccessIterator first, RandomAccessIterator last,
+                                  const T &value, Distance *, random_access_iterator_tag) {
+    Distance len = last - first;
+    Distance half;
+    RandomAccessIterator middle;
+
+    while (len > 0) {
+        half = len / 2;
+        middle = first + half;
+        if (*middle > value) {
+            len = half;
+        } else {
+            first = middle + 1;
+            len = len - half - 1;
+        }
+    }
+    return first;
+}
+
+template<class ForwardIterator, class T>
+bool binary_search(ForwardIterator first, ForwardIterator last, const T &value) {
+    ForwardIterator i = lower_bound(first, last, value);
+    return i != last && value == *i; // or !(value<*i)
+}
+
+template<class ForwardIterator, class T, class Compare>
+bool binary_search(ForwardIterator first, ForwardIterator last, const T &value, Compare comp) {
+    ForwardIterator i = lower_bound(first, last, value, comp);
+    return i != last && !comp(value, i);
+}
+
+
 #endif //BETHSTL_ALGORITHM_BASE_H
