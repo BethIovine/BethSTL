@@ -990,5 +990,60 @@ bool binary_search(ForwardIterator first, ForwardIterator last, const T &value, 
     return i != last && !comp(value, i);
 }
 
+template<class BidirectionalIterator>
+bool next_permutation(BidirectionalIterator first, BidirectionalIterator last) {
+    if (first == last) return false;     // empty
+    BidirectionalIterator i = first;
+    ++i;
+    if (i == last) return false;     //only one element
+    i = last;
+    --i;
+
+    while (true) {
+        BidirectionalIterator ii = i;
+        --i;
+        if (*i < *ii) {
+            BidirectionalIterator j = last;
+            while (!(*i < *--j));// until find j element > i
+            iter_swap(i, j);
+            reverse(ii, last);
+            return true;
+        }
+
+        if (i == first) {
+            reverse(first, last);
+            return false;
+        }
+    }
+}
+
+template<class BidirectionalIterator>
+bool prev_permutation(BidirectionalIterator first, BidirectionalIterator last) {
+    if (first == last) return false;
+    BidirectionalIterator i = first;
+    ++i;
+    if (i == last) return false;
+    i = last;
+    --i;
+
+    while (true) {
+        BidirectionalIterator ii = i;
+        --i;
+        if (*ii < *i) {
+            BidirectionalIterator j = last;
+            while (!(*--j < *i));
+            iter_swap(i, j);
+            reverse(ii, last);
+            return true;
+        }
+
+        if (i == first) {
+            reverse(first, last);
+            return false;
+        }
+    }
+}
+
+
 
 #endif //BETHSTL_ALGORITHM_BASE_H
