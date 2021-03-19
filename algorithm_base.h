@@ -7,8 +7,10 @@
 
 #include "iterator.h"
 #include "type_traits.h"
+#include "heap.h"
 #include <cstring>
 #include <utility>
+#include <cstdlib>
 
 template<class T>
 inline const T &max(const T &a, const T &b) {
@@ -1044,6 +1046,39 @@ bool prev_permutation(BidirectionalIterator first, BidirectionalIterator last) {
     }
 }
 
+template<class RandomAccessIterator>
+inline void random_shuffle(RandomAccessIterator first, RandomAccessIterator last) {
+    _random_shuffle(first, last, distance_type(first));
+}
+
+template<class RandomAccessIterator, class Distance>
+void _random_shuffle(RandomAccessIterator first, RandomAccessIterator last, Distance *) {
+    if (first == last) return;
+
+    for (RandomAccessIterator i = first + 1; i != last; ++i) {
+        iter_swap(i, first + Distance(std::rand() % ((i - first) + 1)));
+    }
+}
+
+template<class RandomAccessIterator>
+inline void partial_sort(RandomAccessIterator first, RandomAccessIterator middle,
+                         RandomAccessIterator last) {
+    _partial_sort(first, middle, last, value_type(first));
+}
+
+// make heap of [first,middle), and travel from [middle,last) and push small value to heap
+// ,then sort heap at last
+template<class RandomAccessIterator, class T>
+void _partial_sort(RandomAccessIterator first, RandomAccessIterator middle,
+                   RandomAccessIterator last, T *) {
+    make_heap(first, middle);
+    for (RandomAccessIterator i = middle; i < last; ++i) {
+        if (*i < *first) {
+            _pop_heap(first, middle, i, T(*i), distance_type(first));
+        }
+    }
+    sort_heap(first, middle);
+}
 
 
 #endif //BETHSTL_ALGORITHM_BASE_H
