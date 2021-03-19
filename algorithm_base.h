@@ -1080,5 +1080,130 @@ void _partial_sort(RandomAccessIterator first, RandomAccessIterator middle,
     sort_heap(first, middle);
 }
 
+template<class RandomAccessIterator>
+void insert_sort(RandomAccessIterator first, RandomAccessIterator last) {
+    if (first == last) return;
+    for (RandomAccessIterator i = first + 1; i != last; ++i) {
+        linear_insert(first, i, value_type(first));
+    }
+}
+
+template<class RandomAccessIterator, class T>
+inline void linear_insert(RandomAccessIterator first, RandomAccessIterator last, T *) {
+    T value = *last;
+    if (value < *first) {
+        copy_backward(first, last, last + 1);
+        *first = value;
+    } else {
+        unguarded_linear_insert(last, value);
+    }
+}
+
+template<class RandomAccessIterator, class T>
+void unguarded_linear_insert(RandomAccessIterator last, T value) {
+    RandomAccessIterator next = last;
+    --next;
+    while (value < *next) {
+        *last = *next;
+        last = next;
+        --next;
+    }
+
+    *last = value;
+}
+
+
+// quick sort does not want input elements in sequence and degrade to n^2 sort
+// so choose pivot from median of three(head , middle , tail)
+template<class T>
+inline const T &_median(const T &a, const T &b, const T &c) {
+    if (a < b) {
+        if (b < c) {
+            return b;
+        } else if (a < c) {
+            return c;
+        } else {
+            return a;
+        }
+    } else if (a < c) {
+        return a;
+    } else if (b < c) {
+        return c;
+    } else {
+        return b;
+    }
+}
+
+template<class RandomAccessIterator, class T>
+RandomAccessIterator unguarded_partition(RandomAccessIterator first, RandomAccessIterator last,
+                                         T pivot) {
+    while (true) {
+        while (*first < pivot) ++first;
+        --last;
+        while (*last > pivot) --last;
+        if (!(first < last)) return first;
+        iter_swap(first, last);
+        ++first;
+    }
+}
+
+//find 2^k <=n 's max k
+template<class Size>
+inline Size _lg(Size n) {
+    Size k;
+    for (k = 0; n > 1; n >>= 1) ++k;
+    return k;
+}
+
+template<class RandomAccessIterator>
+inline void sort(RandomAccessIterator first, RandomAccessIterator last) {
+    if (first != last) {
+        introsort_loop(first, last, value_type(first), _lg(last - first) * 2);
+        final_insertion_sort(first, last);
+    }
+}
+
+const int _stl_threshold = 16;
+
+template<class RandomAccessIterator, class T, class Size>
+void introsort_loop(RandomAccessIterator first, RandomAccessIterator last,
+                    T *, Size depth_limit) {
+    while (last - first > _stl_threshold) {
+        if (depth_limit == 0) {
+            // change to heapsort
+            partial_sort(first, last, last);
+            return;
+        }
+
+        --depth_limit;
+        RandomAccessIterator cut = unguarded_partition(first, last,
+                                                       T(_median(*first, *(first + (last - first) / 2), *(last - 1))));
+        introsort_loop(cut, last, value_type(first, depth_limit));
+        last = cut;
+    }
+}
+
+template<class RandomAccessIterator>
+void final_insertion_sort(RandomAccessIterator first, RandomAccessIterator last) {
+    if (last - first > _stl_threshold) {
+        insert_sort(first, first + _stl_threshold);
+        unguarded_insertion_sort(first + _stl_threshold, last);
+    } else {
+        insert_sort(first, last);
+    }
+}
+
+template<class RandomAccessIterator>
+inline void unguarded_insertion_sort(RandomAccessIterator first, RandomAccessIterator last) {
+    unguarded_insertion_sort_aux(first, last, value_type(first));
+}
+
+template<class RandomAccessIterator, class T>
+void unguarded_insertion_sort_aux(RandomAccessIterator first, RandomAccessIterator last, T *) {
+    for (RandomAccessIterator i = first; i != last; ++i) {
+        unguarded_linear_insert(i, T(*i));
+    }
+}
+
 
 #endif //BETHSTL_ALGORITHM_BASE_H
